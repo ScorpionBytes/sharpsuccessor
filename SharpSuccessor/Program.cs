@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.DirectoryServices;
+using System.DirectoryServices.ActiveDirectory;
 
 namespace SharpSuccessor
 {
@@ -10,6 +8,15 @@ namespace SharpSuccessor
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("ASCII\n");
+            try
+            {
+                Modules.ArgParse.Execute(args);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("[!] Exception: " + e.Message);
+            }
         }
     }
 }
