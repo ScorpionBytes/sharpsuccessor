@@ -1,6 +1,7 @@
 ﻿using System;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
+using System.Security.Cryptography;
 
 namespace SharpSuccessor
 {
@@ -12,6 +13,7 @@ namespace SharpSuccessor
             try
             {
                 Modules.ArgParse.Execute(args);
+
             }
             catch (Exception e)
             {

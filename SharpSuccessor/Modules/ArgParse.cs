@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.DirectoryServices;
 
 namespace SharpSuccessor.Modules
 {
@@ -15,7 +16,6 @@ namespace SharpSuccessor.Modules
         static List<string> sMods = new List<string>
         {
             "add",
-            "clear",
 
         };
 
@@ -67,7 +67,32 @@ namespace SharpSuccessor.Modules
                 {
                     switch (args.First().ToLower())
                     {
+                        case "add":
+                            if (args.Length > 1)
+                            {
+                                string computer = null;
+                                string target = null;
+                                string path = null;
+                                string dMSAName = null; 
+                                Dictionary<string, string> cmd = Parse(args);
 
+                                if (cmd == null)
+                                {
+                                    return;
+                                }
+
+                                cmd.TryGetValue("/computer", out computer);
+                                cmd.TryGetValue("/target", out target);
+                                cmd.TryGetValue("/path", out path);
+                                cmd.TryGetValue("/name", out dMSAName);
+                                DirectoryEntry obj = dMSA.CreatedMSA(path, dMSAName);
+                                if (obj != null)
+                                {
+                                    dMSA.migratedMSA(obj, target, computer);
+                                }
+
+                            }
+                            break;
                     }
                 }
                 catch (IndexOutOfRangeException)
