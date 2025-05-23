@@ -38,4 +38,5 @@ Now that we have the ticket in memory, we can test access:
 
 ![image](https://github.com/user-attachments/assets/6838bb98-5b7a-406a-a889-9e9236a3428f)
 
-
+## Assistance and Inspirations
+Massive thanks to [Jim Sykora](https://github.com/JimSycurity) and [Garrett Foster](https://x.com/unsigned_sh0rt) for the inspirations and assistance for this tool!
