@@ -92,11 +92,8 @@ namespace SharpSuccessor.Modules
                                     return;
                                 }
 
-                                DirectoryEntry obj = dMSA.CreatedMSA(path, dMSAName);
-                                if (obj != null)
-                                {
-                                    dMSA.migratedMSA(obj, target, computer);
-                                }
+                                dMSA.CreatedMSA(path, dMSAName, computer, target);
+
 
                             }
                             break;

