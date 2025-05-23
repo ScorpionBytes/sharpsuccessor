@@ -85,6 +85,13 @@ namespace SharpSuccessor.Modules
                                 cmd.TryGetValue("/target", out target);
                                 cmd.TryGetValue("/path", out path);
                                 cmd.TryGetValue("/name", out dMSAName);
+
+                                if(computer == null || target == null || path ==null || dMSAName == null)
+                                {
+                                    Console.WriteLine("[!] Missing required arguments: computer,target,path,name");
+                                    return;
+                                }
+
                                 DirectoryEntry obj = dMSA.CreatedMSA(path, dMSAName);
                                 if (obj != null)
                                 {
