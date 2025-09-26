@@ -1,8 +1,8 @@
 # SharpSuccessor
 
-SharpSuccessor is a .NET Proof of Concept (POC) for fully weaponizing Yuval Gordon’s ([@YuG0rd](https://x.com/YuG0rd)) [BadSuccessor](https://www.akamai.com/blog/security-research/abusing-dmsa-for-privilege-escalation-in-active-directory) attack from Akamai. A low privilege user with `CreateChild` permissions over any Organizational Unit (OU) in the Active Directory domain can escalate privileges to domain administrator.
+SharpSuccessor is a .NET Proof of Concept (POC) for fully weaponizing Yuval Gordon’s ([@YuG0rd](https://x.com/YuG0rd)) [BadSuccessor](https://www.akamai.com/blog/security-research/abusing-dmsa-for-privilege-escalation-in-active-directory) attack from Akamai. A low privilege user with `CreateChild` permissions over any Organizational Unit (OU) in the Active Directory domain with write access on a target object can perform account takeover.
 
-Use SharpSuccessor to add and weaponize the dMSA object, setting the account with access to the current user context:
+Use SharpSuccessor to add and weaponize the dMSA object, as well as write the proper attributes on the target account you wish to impersonate:
 ```
 SharpSuccessor.exe add /impersonate:Administrator /path:"ou=test,dc=lab,dc=lan" /account:jdoe /name:attacker_dMSA
 ```
